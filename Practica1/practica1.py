@@ -6,8 +6,7 @@ import matplotlib.pyplot as plt
 imagen1 = cv2.imread("Practica1/ri.png", cv2.IMREAD_COLOR)
 imagen2 = cv2.imread("Practica1/letra.png", cv2.IMREAD_COLOR)
 
-alto, ancho, canales = imagen1.shape
-print(f"Alto: {alto}, Ancho: {ancho}, Canales: {canales}")
+alto, ancho = imagen1.shape[:2]
 
 R = imagen1[:, :, 2]
 G = imagen1[:, :, 1]
