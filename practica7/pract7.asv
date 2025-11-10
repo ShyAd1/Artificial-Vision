@@ -1,0 +1,186 @@
+% Valor maximo al que puede permanecer una clase
+maxVal = 255;
+
+[filename, pathname] = uigetfile({'*.jpg;*.png;*.bmp;*.tif', 'Image Files (*.jpg, *.png, *.bmp, *.tif)'; '*.*', 'All Files (*.*)'}, 'Selecciona una imagen');
+if isequal(filename, 0) || isequal(pathname, 0)
+    disp('El usuario ha cancelado la seleccion');
+else
+    fullImagePath = fullfile(pathname, filename);
+    disp(['Imagen seleccionada: ', fullImagePath]);
+end
+
+img = imread(fullImagePath);
+% Mostrar la imagen
+imshow(img);
+title('Imagen Cargada');
+[m,n]=size(img);
+
+% Preguntar al usuario cuantas clases quiere
+numClases = input('¿Cuántas clases quiere? ');
+
+% Inicializar un arreglo para almacenar las clases
+clases = cell(1, numClases);
+
+% Preguntar al usuario cuantos indices por clases 
+numIndices = input('¿Cuántos índices por clase? ');
+
+for i = 1:numClases
+    % Seleccionar con el mouse los limites de la ventana
+    [x,y]=ginput(2);
+    
+    % Calcular las dimensiones del rectangulo
+    
+    x_min=min(x);
+    y_min=min(y);
+    
+    ancho=abs(x(2)-x(1));
+    alto=abs(y(2)-y(1));
+    
+    colors = lines(numClases); % Generar colores para cada clase
+    % Dibujando la ventana
+    hold on
+    rectangle('Position',[x_min y_min,ancho alto],'EdgeColor',colors(i,:),'LineWidth',2)
+    hold off;
+    
+    % Generando los puntos sobre el rectángulo;
+    x_rand = x_min + ancho * rand(1,numIndices);
+    y_rand = y_min + alto * rand(1,numIndices);
+    
+    % Almacenar los valores R, G, B para cada punto
+    rgb_values = zeros(numIndices, 3); % Inicializar matriz para valores RGB
+    for j = 1:numIndices
+        % Obtener el color del pixel en la posición aleatoria
+        pixel = img(round(y_rand(j)), round(x_rand(j)), :);
+        rgb_values(j, :) = squeeze(pixel)'; % Almacenar los valores R, G, B
+    end
+    clases{i} = rgb_values; % Almacenar los valores RGB en la celda correspondiente
+    
+    % Ploteando los puntos
+    hold on
+    plot(x_rand(1,:), y_rand(1,:), 'o', 'MarkerSize', 10, 'MarkerFaceColor', colors(i,:))
+    hold off
+end
+
+% Bloque para pedir n vectores
+o = "si";
+previous_pixel = []; % Variable para almacenar el pixel anterior
+while (o == "si" || o == "Si" || o == "SI" || o == "sI" || o == "s" || o == "S")
+    % Pedir vector al usuario
+    fprintf('El valor minimo al que puede pertencer una clase es de %d en x y %d en y \n', maxVal, maxVal)
+    % Permitir al usuario seleccionar un pixel en la imagen
+    [x_pixel, y_pixel] = ginput(1); % Obtener la posición del pixel seleccionado
+    x_pixel = round(x_pixel); % Redondear a la coordenada entera más cercana
+    y_pixel = round(y_pixel);
+    
+    % Si hay un pixel anterior, despintarlo
+    if ~isempty(previous_pixel)
+        hold on;
+        plot(previous_pixel(1), previous_pixel(2), 'w+', 'MarkerSize', 10, 'LineWidth', 2); % Marcar el pixel anterior en blanco
+        hold off;
+    end
+    
+    % Mostrar el pixel seleccionado en la imagen
+    hold on;
+    plot(x_pixel, y_pixel, 'r+', 'MarkerSize', 10, 'LineWidth', 2); % Marcar el pixel seleccionado
+    hold off;
+
+    % Actualizar el pixel anterior
+    previous_pixel = [x_pixel, y_pixel];
+
+    % Poner la leyenda del vector ingresado y leyendas de las n clases
+    legend([arrayfun(@(i) sprintf('Clase %d', i), 1:numClases, 'UniformOutput', false), 'Vector ingresado']);
+    
+    % Almacenar las coordenadas del pixel seleccionado
+    vector = [x_pixel; y_pixel];
+    
+    % Almacenar el valor en los canales R, G, B del pixel seleccionado
+    pixel_value = img(y_pixel, x_pixel, :);
+    rgb_vector = squeeze(pixel_value)'; % Almacenar los valores R, G, B
+
+    o1 = "si";
+    while (o1 == "si" || o1 == "Si" || o1 == "SI" || o1 == "sI" || o1 == "s" || o1 == "S")
+        % Menu para escoger tipo de distancia, euclidiana o mahalanobis
+        % Pedir al usuario el tipo de distancia
+        fprintf('========== Menu ==========\n');
+        fprintf('1.- Distancia Euclidiana\n');
+        fprintf('2.- Distancia Mahalanobis\n');
+        distanceType = input('Seleccione el tipo de distancia (1 o 2): ');
+
+        % Validar la entrada del usuario para el tipo de distancia
+        switch distanceType
+            case 1 % Distancia euclidiana
+                % Calcular centroides de las clases
+                centroid = cell(1, numClases);
+                for i = 1:numClases
+                    centroid{i} = round(mean(clases{i}, 1)); % Calcular el centroide de cada clase y redondear
+                end
+            
+                % Calcular la clase más cercana al vector verificando que no pase de la
+                % maxima distancia
+                % Calcular distancias y encontrar la clase más cercana
+                distances = zeros(1, numClases);
+                for i = 1:numClases
+                    distances(i) = norm(double(centroid{i}) - double(rgb_vector)); % Calcular la distancia euclidiana
+                end
+            
+                % Mostrar las distancias calculadas en formato de número con 2 decimales
+                fprintf('Distancias del vector a cada clase:\n');
+                for i = 1:numClases
+                    fprintf('Distancia a la Clase %d: %.2f\n', i, distances(i)); % Mostrar la distancia calculada para cada clase
+                end
+                
+                % Verificar si la distancia mínima es aceptable
+                [minDistance, closestClass] = min(distances); % Encontrar la distancia mínima y su índice
+                if minDistance < maxVal
+                    fprintf('La clase más cercana es la Clase %d con distancia euclidiana\n', closestClass);
+                else
+                    fprintf('Ninguna clase está dentro de la distancia mínima.\n');
+                end
+            case 2 % Distancia mahalanobis
+                % Calcular la matriz de covarianza y la inversa para la distancia Mahalanobis
+                covMatrix = cell(1, numClases);
+                for i = 1:numClases
+                    covMatrix{i} = cov(clases{i}); % Calcular la matriz de covarianza para cada clase
+                end
+                invCovMatrix = cell(1, numClases);
+                for i = 1:numClases
+                    invCovMatrix{i} = inv(covMatrix{i}); % Calcular la inversa de la matriz de covarianza
+                end
+
+                % Calcular la media de cada clase
+                meanVectors = cell(1, numClases);
+                for i = 1:numClases
+                    meanVectors{i} = mean(clases{i}, 1)'; % Calcular la media de cada clase
+                end
+                
+                % Calcular distancias Mahalanobis
+                distances = zeros(1, numClases);
+                for i = 1:numClases
+                    diff = double(rgb_vector(:)) - double(meanVectors{i}); % Vector dado menos la media de la clase
+                    if size(diff, 1) == size(invCovMatrix{i}, 1) && size(invCovMatrix{i}, 1) == 3 % Verificar que las dimensiones coincidan y sean 3x3
+                        distances(i) = sqrt(diff' * invCovMatrix{i} * diff); % Calcular la distancia Mahalanobis
+                        
+                    end
+                end
+                
+                % Mostrar las distancias calculadas en formato de número con 2 decimales
+                fprintf('Distancias del vector a cada clase:\n');
+                for i = 1:numClases
+                    fprintf('Distancia a la Clase %d: %.2f\n', i, distances(i)); % Mostrar la distancia calculada para cada clase
+                end
+                
+                % Verificar si la distancia mínima es aceptable
+                [minDistance, closestClass] = min(distances); % Encontrar la distancia mínima y su índice
+                if minDistance < maxVal
+                    fprintf('La clase más cercana es la Clase %d con la distancia mahalanobis\n', closestClass);
+                else
+                    fprintf('Ninguna clase está dentro de la distancia mínima.\n');
+                end
+            otherwise
+                fprintf('Seleccione una opcion valida.\n');
+        end
+        o1 = input('¿Desea probar el mismo vector con otro tipo de distancia? (si/no): ', 's');
+    end
+    o = input('¿Desea ingresar otro vector? (si/no): ', 's');
+end
+fprintf('Gracias por usar el clasificador de clases.');
