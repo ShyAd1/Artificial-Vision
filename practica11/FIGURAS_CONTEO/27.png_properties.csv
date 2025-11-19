@@ -1,0 +1,5 @@
+Image,ObjectID,Area,Perimeter,CentroidX,CentroidY,AngleRad,Eccentricity,Circularity,Solidity,BBoxAspect,CornerCount,ConcaveCount,Label_Euclid,Label_Mahalanobis
+27.png,1,10071,414,860.0000,150.1803,1.570796,0.499096,0.738383,1438.714286,1.0000,1,0,flecha,flecha
+27.png,2,32761,720,272.0000,175.0000,0.000000,0.000000,0.794149,1.011142,1.0000,1,0,circulo,estrella
+27.png,3,23068,875,581.5325,337.0157,1.583523,0.321231,0.378620,3295.428571,1.0000,1,0,estrella,estrella
+27.png,4,9844,316,891.5221,438.5611,1.566533,0.260860,1.238817,1406.285714,1.0000,1,0,circulo,circulo

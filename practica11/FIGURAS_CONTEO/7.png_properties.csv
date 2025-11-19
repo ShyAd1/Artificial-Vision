@@ -1,0 +1,3 @@
+Image,ObjectID,Area,Perimeter,CentroidX,CentroidY,AngleRad,Eccentricity,Circularity,Solidity,BBoxAspect,CornerCount,ConcaveCount,Label_Euclid,Label_Mahalanobis
+7.png,1,45173,676,644.0399,304.0443,3.138539,0.221231,1.242211,6453.285714,1.0000,1,0,circulo,circulo
+7.png,2,11027,334,284.5593,399.0314,1.591077,0.131771,1.242151,1575.285714,1.0000,1,0,circulo,circulo
