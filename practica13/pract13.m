@@ -6,7 +6,7 @@
 clear; clc; close all;
 
 %% 1. Generar 10 puntos aleatorios en 2D
-rng(42); % semilla para reproducibilidad
+rng(45); % semilla para reproducibilidad
 numPuntos = 10;
 puntos = rand(numPuntos, 2) * 10; % puntos en rango [0,10] x [0,10]
 
@@ -151,6 +151,10 @@ box on;
 maxHeight = max(Z(:,3)) * 1.1;
 colors = jet(size(Z,1)); % azul (temprano) a rojo (tardío)
 
+% Guardar handles para leyenda
+legendHandles = gobjects(size(Z,1), 1);
+legendLabels = cell(size(Z,1), 1);
+
 for paso = 1:size(Z,1)
     c1 = Z(paso, 1);
     c2 = Z(paso, 2);
@@ -165,10 +169,13 @@ for paso = 1:size(Z,1)
     % Color según paso de fusión
     color = colors(paso,:);
     
-    % Dibujar líneas con color
+    % Dibujar líneas con color (guardar handle para leyenda)
     plot([x1 x1], [y1 dist], '-', 'Color', color, 'LineWidth', 2);
     plot([x2 x2], [y2 dist], '-', 'Color', color, 'LineWidth', 2);
-    plot([x1 x2], [dist dist], '-', 'Color', color, 'LineWidth', 2.5);
+    legendHandles(paso) = plot([x1 x2], [dist dist], '-', 'Color', color, 'LineWidth', 2.5);
+    
+    % Crear etiqueta para leyenda
+    legendLabels{paso} = sprintf('Cluster %d', numPuntos + paso);
 end
 
 % Configurar ejes
@@ -194,6 +201,9 @@ set(gca, 'XTick', labelPos_sorted);
 set(gca, 'XTickLabel', labels_sorted, 'FontSize', 10);
 set(gca, 'FontSize', 10);
 grid on;
+
+% Añadir leyenda tipo tabla con los clusters
+legend(legendHandles, legendLabels, 'Location', 'eastoutside', 'FontSize', 9);
 
 hold off;
 
@@ -276,7 +286,7 @@ for paso = 0:size(Z,1)
     pause(1.2); % pausa para visualizar cada paso
 end
 
-fprintf('\n✓ Agrupamiento completo: todos los puntos en un solo cluster\n');
+fprintf('\nAgrupamiento completo: todos los puntos en un solo cluster\n');
 
 %% Función para calcular orden óptimo de hojas en dendrograma
 function orden = optimalLeafOrder(Z, numPuntos)
